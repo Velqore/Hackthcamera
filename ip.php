@@ -1,31 +1,23 @@
 <?php
 
-if (!empty($_SERVER['HTTP_CLIENT_IP']))
-    {
-      $ipaddress = $_SERVER['HTTP_CLIENT_IP']."\r\n";
-    }
-elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
-    {
-      $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR']."\r\n";
-    }
-else
-    {
-      $ipaddress = $_SERVER['REMOTE_ADDR']."\r\n";
-    }
-$useragent = " User-Agent: ";
-$browser = $_SERVER['HTTP_USER_AGENT'];
+if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+    $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
+} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+    $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+} else {
+    $ipaddress = $_SERVER['REMOTE_ADDR'];
+}
 
+$browser    = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'Unknown';
+$timestamp  = date('Y-m-d H:i:s T');
 
 $file = 'ip.txt';
-$victim = "IP: ";
-$fp = fopen($file, 'a');
+$fp   = fopen($file, 'a');
 
-fwrite($fp, $victim);
-fwrite($fp, $ipaddress);
-fwrite($fp, $useragent);
-fwrite($fp, $browser);
-
+fwrite($fp, "Time: "       . $timestamp  . "\r\n");
+fwrite($fp, "IP: "         . $ipaddress  . "\r\n");
+fwrite($fp, "User-Agent: " . $browser    . "\r\n");
+fwrite($fp, str_repeat('-', 40) . "\r\n");
 
 fclose($fp);
 
-  
